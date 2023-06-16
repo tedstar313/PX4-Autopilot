@@ -485,6 +485,8 @@ void EKF2::Run()
 		}
 
 #endif // CONFIG_EKF2_MAGNETOMETER
+
+		_ekf.updateParameters();
 	}
 
 	if (!_callback_registered) {
