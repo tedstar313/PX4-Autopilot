@@ -15,38 +15,8 @@ else
 	board_adc start
 fi
 
-
-if param compare SENS_EN_INA226 1
-then
-	# Start Digital power monitors
-	ina226 -X -b 1 -t 1 -k start
-
-	if [ $HAVE_PM2 = yes ]
-	then
-		ina226 -X -b 2 -t 2 -k start
-	fi
-fi
-
-if param compare SENS_EN_INA228 1
-then
-	# Start Digital power monitors
-	ina228 -X -b 1 -t 1 -k start
-	if [ $HAVE_PM2 = yes ]
-	then
-		ina228 -X -b 2 -t 2 -k start
-	fi
-fi
-
-if param compare SENS_EN_INA238 1
-then
-	# Start Digital power monitors
-	ina238 -X -b 1 -t 1 -k start
-	if [ $HAVE_PM2 = yes ]
-	then
-		ina238 -X -b 2 -t 2 -k start
-	fi
-fi
-
+# INA226, INA228, INA238 auto-start
+i2c_launcher start
 
 if ver hwtypecmp V6X000004 V6X001004 V6X004004 V6X005004
 then
