@@ -78,8 +78,11 @@ private:
 
 bool operator==(const TempData &lhs, const TempData &rhs)
 {
-	size_t min_size = lhs.size() > rhs.size() ? rhs.size() : lhs.size();
-	return memcmp(lhs.buf(), rhs.buf(), min_size) == 0;
+	if (lhs.size() != rhs.size()) {
+		return false;
+	}
+
+	return memcmp(lhs.buf(), rhs.buf(), lhs.size()) == 0;
 }
 
 
@@ -121,9 +124,9 @@ TEST(VariableLengthRingbuffer, PushAndPopOne)
 	EXPECT_EQ(data, out);
 
 	EXPECT_TRUE(buf.push_back(data.buf(), data.size()));
-	// Out buffer is bigger
-	TempData out2{21};
-	EXPECT_EQ(buf.pop_front(out2.buf(), out2.size()), 20);
+	// Out buffer is supposedly bigger
+	TempData out2{20};
+	EXPECT_EQ(buf.pop_front(out2.buf(), 21), 20);
 	EXPECT_EQ(data, out2);
 
 	EXPECT_TRUE(buf.push_back(data.buf(), data.size()));
@@ -172,20 +175,23 @@ TEST(VariableLengthRingbuffer, PushAndPopSeveralVariableSize)
 	data2.paint(42);
 	EXPECT_TRUE(buf.push_back(data2.buf(), data2.size()));
 
-	TempData out1{100};
-	EXPECT_EQ(buf.pop_front(out1.buf(), out1.size()), data1.size());
+	// Supposedly more space
+	TempData out1{50};
+	EXPECT_EQ(buf.pop_front(out1.buf(), 100), data1.size());
 	EXPECT_EQ(data1, out1);
 
 	TempData data3{50};
 	data3.paint(33);
 	EXPECT_TRUE(buf.push_back(data3.buf(), data3.size()));
 
-	TempData out2{100};
-	EXPECT_EQ(buf.pop_front(out2.buf(), out2.size()), data2.size());
+	// Supposedly more space
+	TempData out2{30};
+	EXPECT_EQ(buf.pop_front(out2.buf(), 100), data2.size());
 	EXPECT_EQ(data2, out2);
 
-	TempData out3{100};
-	EXPECT_EQ(buf.pop_front(out3.buf(), out3.size()), data3.size());
+	// Supposedly more space
+	TempData out3{50};
+	EXPECT_EQ(buf.pop_front(out3.buf(), 100), data3.size());
 	EXPECT_EQ(data3, out3);
 
 	TempData out4{100};
