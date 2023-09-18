@@ -54,8 +54,8 @@ RtlMissionFastReverse::RtlMissionFastReverse(Navigator *navigator) :
 
 void RtlMissionFastReverse::on_activation()
 {
-	setMissionToClosestItem(_global_pos_sub.get().lat, _global_pos_sub.get().lon, _global_pos_sub.get().alt,
-				_home_pos_sub.get().alt, _vehicle_status_sub.get());
+	_is_current_planned_mission_item_valid = setMissionToClosestItem(_global_pos_sub.get().lat, _global_pos_sub.get().lon,
+			_global_pos_sub.get().alt, _home_pos_sub.get().alt, _vehicle_status_sub.get()) == PX4_OK;
 
 	if (_land_detected_sub.get().landed) {
 		// already landed, no need to do anything, invalidate the position mission item.
