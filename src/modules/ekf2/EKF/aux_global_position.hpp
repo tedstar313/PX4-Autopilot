@@ -86,13 +86,15 @@ private:
 	RingBuffer<AuxGlobalPositionSample> _aux_global_position_buffer{20}; // TODO: size with _obs_buffer_length and actual publication rate
 	uint64_t _time_last_buffer_push{0};
 
-	enum state {
+	enum class State {
 		stopped,
 		starting,
 		active,
 		stopping,
 		resetting,
 	};
+
+	State _state{State::stopped};
 
 #if defined(MODULE_NAME)
 	uORB::PublicationMulti<estimator_aid_source2d_s> _estimator_aid_src_aux_global_position_pub{ORB_ID(estimator_aid_src_aux_global_position)};

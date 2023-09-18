@@ -64,33 +64,83 @@ void AuxGlobalPosition::update(Ekf &ekf, const estimator::imuSample &imu_delayed
 
 #endif // MODULE_NAME
 
+	AuxGlobalPositionSample sample;
 
-	AuxGlobalPositionSample aux_global_position_sample;
+	if (_aux_global_position_buffer.pop_first_older_than(imu_delayed.time_us, &sample)) {
 
-	if (_aux_global_position_buffer.pop_first_older_than(imu_delayed.time_us, &aux_global_position_sample)) {
-
-		if (!ekf.global_origin_valid()) {
+		if (!_param_ekf2_agp_ctrl.get() & 0b001) {
 			return;
 		}
 
-		const Vector2f position = ekf.global_origin().project(aux_global_position_sample.latitude, aux_global_position_sample.longitude);
-		//const float hgt = ekf.getEkfGlobalOriginAltitude() - (float)aux_global_position_sample.altitude;
-
 		estimator_aid_source2d_s aid_src{};
+		Vector2f position;
 
-		// relax the upper observation noise limit which prevents bad GPS perturbing the position estimate
-		float pos_noise = math::max(aux_global_position_sample.positional_uncertainty, _param_ekf2_agp_noise.get());
-		const float pos_var = sq(pos_noise);
-		const Vector2f pos_obs_var(pos_var, pos_var);
-		ekf.updateHorizontalPositionAidSrcStatus(aux_global_position_sample.time_us,
-				position,                                   // observation
-				pos_obs_var,                                // observation variance
-				math::max(_param_ekf2_agp_gate.get(), 1.f), // innovation gate
-				aid_src);
-		aid_src.fusion_enabled = _param_ekf2_agp_ctrl.get() & 0b001; // bit 0 Horizontal position
+		if (ekf.global_origin_valid()) {
+			position = ekf.global_origin().project(sample.latitude, sample.longitude);
+			//const float hgt = ekf.getEkfGlobalOriginAltitude() - (float)sample.altitude;
+			// relax the upper observation noise limit which prevents bad measurements perturbing the position estimate
+			float pos_noise = math::max(sample.positional_uncertainty, _param_ekf2_agp_noise.get());
+			const float pos_var = sq(pos_noise);
+			const Vector2f pos_obs_var(pos_var, pos_var);
+			ekf.updateHorizontalPositionAidSrcStatus(sample.time_us,
+					position,                                   // observation
+					pos_obs_var,                                // observation variance
+					math::max(_param_ekf2_agp_gate.get(), 1.f), // innovation gate
+					aid_src);
+		}
 
-		if (aux_global_position_sample.position_valid && ekf.control_status_flags().yaw_align) {
-			ekf.fuseHorizontalPosition(aid_src);
+		const bool starting_conditions = sample.position_valid
+						   && ekf.control_status_flags().yaw_align;
+		const bool continuing_conditions = starting_conditions
+						   && ekf.global_origin_valid();
+
+		switch (_state) {
+		case State::stopped:
+			if (starting_conditions) {
+				_state = State::starting;
+			}
+			break;
+
+		case State::active:
+			if (continuing_conditions) {
+				aid_src.fusion_enabled = true;
+				ekf.fuseHorizontalPosition(aid_src);
+
+			} else {
+				_state = State::stopping;
+			}
+			break;
+
+		default:
+			break;
+		}
+
+		switch (_state) {
+		case State::starting:
+			if (!ekf.global_origin_valid()) {
+				// Try to initialize using measurement
+				if (ekf.setEkfGlobalOrigin(sample.latitude, sample.longitude, sample.altitude, sample.positional_uncertainty)) {
+					ekf.enableControlStatusAuxGpos();
+					aid_src.fusion_enabled = true;
+					_state = State::active;
+
+				} else {
+					_state = State::stopping;
+				}
+			}
+			break;
+
+		case State::stopping:
+			ekf.disableControlStatusAuxGpos();
+			_state = State::stopped;
+			break;
+
+		case State::resetting:
+			_state = State::active;
+			break;
+
+		default:
+			break;
 		}
 
 #if defined(MODULE_NAME)
