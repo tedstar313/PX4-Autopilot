@@ -466,16 +466,16 @@ void SimulatorMavlink::handle_message_hil_gps(const mavlink_message_t *msg)
 		}
 
 
-#if 0
+#if 1
 		{
 			// hack for testing
 			global_odometry_s global_odometry{};
 
 			global_odometry.timestamp_sample = gps.timestamp;
 
-			global_odometry.latitude = (double)gps.lat * 1.0e-7;
-			global_odometry.longitude = (double)gps.lon * 1.0e-7;
-			global_odometry.altitude_agl = (double)gps.alt * 1e-3f;
+			global_odometry.latitude = gps.latitude_deg;
+			global_odometry.longitude = gps.longitude_deg;
+			global_odometry.altitude_agl = gps.altitude_msl_m;
 			global_odometry.positional_uncertainty = 0.7f;
 			global_odometry.valid = true;
 
