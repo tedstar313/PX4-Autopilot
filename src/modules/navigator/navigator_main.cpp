@@ -713,8 +713,16 @@ void Navigator::run()
 			break;
 
 		case vehicle_status_s::NAVIGATION_STATE_AUTO_RTL:
-			_pos_sp_triplet_published_invalid_once = false;
-			navigation_mode_new = &_rtl;
+
+			// If we are already in mission landing, do not switch.
+			if (_navigation_mode == &_mission && _mission.isLanding()) {
+				navigation_mode_new = &_mission;
+
+			} else {
+				_pos_sp_triplet_published_invalid_once = false;
+				navigation_mode_new = &_rtl;
+			}
+
 			break;
 
 		case vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF:
