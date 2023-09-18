@@ -46,8 +46,6 @@ VariableLengthRingbuffer::~VariableLengthRingbuffer()
 
 bool VariableLengthRingbuffer::allocate(size_t buffer_size)
 {
-	LockGuard lg{_mutex};
-
 	assert(_ringbuffer == nullptr);
 
 	_size = buffer_size;
@@ -57,8 +55,6 @@ bool VariableLengthRingbuffer::allocate(size_t buffer_size)
 
 void VariableLengthRingbuffer::deallocate()
 {
-	LockGuard lg{_mutex};
-
 	delete[] _ringbuffer;
 	_ringbuffer = nullptr;
 	_size = 0;
@@ -66,8 +62,6 @@ void VariableLengthRingbuffer::deallocate()
 
 bool VariableLengthRingbuffer::push_back(const uint8_t *packet, size_t packet_len)
 {
-	LockGuard lg{_mutex};
-
 	if (packet_len == 0 || packet == nullptr) {
 		// Nothing to add, we better don't try.
 		return false;
@@ -137,8 +131,6 @@ bool VariableLengthRingbuffer::push_back(const uint8_t *packet, size_t packet_le
 
 size_t VariableLengthRingbuffer::pop_front(uint8_t *buf, size_t buf_max_len)
 {
-	LockGuard lg{_mutex};
-
 	if (buf == nullptr) {
 		// User needs to supply a valid pointer.
 		return 0;

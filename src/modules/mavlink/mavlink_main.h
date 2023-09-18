@@ -647,6 +647,7 @@ private:
 
 	ping_statistics_s	_ping_stats {};
 
+	pthread_mutex_t		_message_buffer_mutex{};
 	VariableLengthRingbuffer _message_buffer{};
 
 	pthread_mutex_t		_send_mutex {};

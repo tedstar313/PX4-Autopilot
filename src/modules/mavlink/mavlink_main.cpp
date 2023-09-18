@@ -1222,6 +1222,7 @@ Mavlink::pass_message(const mavlink_message_t *msg)
 {
 	/* size is 12 bytes plus variable payload */
 	int size = MAVLINK_NUM_NON_PAYLOAD_BYTES + msg->len;
+	LockGuard lg{_message_buffer_mutex};
 	_message_buffer.push_back(reinterpret_cast<const uint8_t *>(msg), size);
 }
 
@@ -2105,7 +2106,7 @@ Mavlink::task_main(int argc, char *argv[])
 		return PX4_ERROR;
 	}
 
-	/* initialize send mutex */
+	pthread_mutex_init(&_message_buffer_mutex, nullptr);
 	pthread_mutex_init(&_send_mutex, nullptr);
 	pthread_mutex_init(&_radio_status_mutex, nullptr);
 
@@ -2115,6 +2116,8 @@ Mavlink::task_main(int argc, char *argv[])
 		 * make space for two messages plus off-by-one space as we use the empty element
 		 * marker ring buffer approach.
 		 */
+		LockGuard lg{_message_buffer_mutex};
+
 		if (!_message_buffer.allocate(2 * sizeof(mavlink_message_t) + 1)) {
 			PX4_ERR("msg buf alloc fail");
 			return PX4_ERROR;
@@ -2465,9 +2468,16 @@ Mavlink::task_main(int argc, char *argv[])
 
 			mavlink_message_t msg{};
 
-			while (_message_buffer.pop_front(reinterpret_cast<uint8_t *>(&msg), sizeof(msg))) {
+			// Moved outside of do-while to avoid "unused-but-set-variable" GCC warning.
+			size_t available_bytes;
+
+			do {
+				{
+					LockGuard lg{_message_buffer_mutex};
+					available_bytes = _message_buffer.pop_front(reinterpret_cast<uint8_t *>(&msg), sizeof(msg));
+				}
 				resend_message(&msg);
-			}
+			} while (available_bytes > 0);
 		}
 
 		/* update TX/RX rates*/
@@ -2522,6 +2532,7 @@ Mavlink::task_main(int argc, char *argv[])
 
 	pthread_mutex_destroy(&_send_mutex);
 	pthread_mutex_destroy(&_radio_status_mutex);
+	pthread_mutex_destroy(&_message_buffer_mutex);
 
 	PX4_INFO("exiting channel %i", (int)_channel);
 

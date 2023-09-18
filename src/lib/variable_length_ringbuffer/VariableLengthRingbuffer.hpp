@@ -36,8 +36,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <pthread.h>
-#include <containers/LockGuard.hpp>
 
 
 // FIFO ringbuffer implementation for packets of variable length.
@@ -45,7 +43,7 @@
 // The variable length is implemented using a 4 byte header
 // containing a the length.
 //
-// The internal data is thread-safe, protected by a mutex.
+// The buffer is not thread-safe.
 
 class VariableLengthRingbuffer
 {
@@ -105,8 +103,6 @@ private:
 	struct Header {
 		uint32_t len;
 	};
-
-	pthread_mutex_t	_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 	size_t _size {0};
 	uint8_t *_ringbuffer {nullptr};
