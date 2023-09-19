@@ -671,6 +671,7 @@ private:
 	perf_counter_t _loop_perf{perf_alloc(PC_ELAPSED, MODULE_NAME": tx run elapsed")};                      /**< loop performance counter */
 	perf_counter_t _loop_interval_perf{perf_alloc(PC_INTERVAL, MODULE_NAME": tx run interval")};           /**< loop interval performance counter */
 	perf_counter_t _send_byte_error_perf{perf_alloc(PC_COUNT, MODULE_NAME": send_bytes error")};           /**< send bytes error count */
+	perf_counter_t _forwarding_error_perf{perf_alloc(PC_COUNT, MODULE_NAME": forwarding error")};           /**< forwarding messages error count */
 
 	void			mavlink_update_parameters();
 

@@ -178,6 +178,7 @@ Mavlink::~Mavlink()
 	perf_free(_loop_perf);
 	perf_free(_loop_interval_perf);
 	perf_free(_send_byte_error_perf);
+	perf_free(_forwarding_error_perf);
 }
 
 void
@@ -1223,7 +1224,10 @@ Mavlink::pass_message(const mavlink_message_t *msg)
 	/* size is 12 bytes plus variable payload */
 	int size = MAVLINK_NUM_NON_PAYLOAD_BYTES + msg->len;
 	LockGuard lg{_message_buffer_mutex};
-	_message_buffer.push_back(reinterpret_cast<const uint8_t *>(msg), size);
+
+	if (!_message_buffer.push_back(reinterpret_cast<const uint8_t *>(msg), size)) {
+		perf_count(_forwarding_error_perf);
+	}
 }
 
 MavlinkShell *
