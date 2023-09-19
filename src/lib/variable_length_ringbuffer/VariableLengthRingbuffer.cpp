@@ -46,18 +46,12 @@ VariableLengthRingbuffer::~VariableLengthRingbuffer()
 
 bool VariableLengthRingbuffer::allocate(size_t buffer_size)
 {
-	assert(_ringbuffer == nullptr);
-
-	_size = buffer_size;
-	_ringbuffer = new uint8_t[_size];
-	return _ringbuffer != nullptr;
+	return _ringbuffer.allocate(buffer_size);
 }
 
 void VariableLengthRingbuffer::deallocate()
 {
-	delete[] _ringbuffer;
-	_ringbuffer = nullptr;
-	_size = 0;
+	_ringbuffer.deallocate();
 }
 
 bool VariableLengthRingbuffer::push_back(const uint8_t *packet, size_t packet_len)
@@ -67,64 +61,21 @@ bool VariableLengthRingbuffer::push_back(const uint8_t *packet, size_t packet_le
 		return false;
 	}
 
-	if (_start <= _end && _size - _end < sizeof(Header)) {
-		// We don't want to break up the header, and there is no space for it,
-		// so we move to beginning of packetfer.
-		_end = 0;
+	size_t space_required = packet_len + sizeof(Header);
+
+	if (space_required > _ringbuffer.space_available()) {
+		return false;
 	}
 
-	if (_start > _end) {
-		// Add after end up to start, no wrap around.
+	Header header{static_cast<uint32_t>(packet_len)};
+	bool result = _ringbuffer.push_back(reinterpret_cast<const uint8_t * >(&header), sizeof(header));
+	assert(result);
 
-		// Leave one byte free so that start don't end up the same
-		// which signals empty.
-		const size_t available = _start - _end - 1;
+	result = _ringbuffer.push_back(packet, packet_len);
+	assert(result);
 
-		if (sizeof(Header) + packet_len > available) {
-			return false;
-		}
-
-		const Header header{(uint32_t)packet_len};
-		memcpy(&_ringbuffer[_end], &header, sizeof(header));
-		_end += sizeof(header);
-		memcpy(&_ringbuffer[_end], packet, packet_len);
-		_end += packet_len;
-
-	} else {
-		// Add after end, maybe wrap around.
-		const size_t available = _start - _end - 1 + _size;
-
-		if (sizeof(Header) + packet_len > available) {
-			return false;
-		}
-
-		const Header header{(uint32_t)packet_len};
-		memcpy(&_ringbuffer[_end], &header, sizeof(header));
-		_end += sizeof(header);
-		_end %= _size;
-
-		if (_end == 0) {
-			// We ended up at beginning after writing, next part is one chunk.
-			memcpy(&_ringbuffer[_end], packet, packet_len);
-			_end += packet_len;
-
-		} else {
-
-			const size_t remaining_packet_len = _size - _end;
-
-			if (packet_len > remaining_packet_len) {
-				memcpy(&_ringbuffer[_end], packet, remaining_packet_len);
-				_end = 0;
-
-				memcpy(&_ringbuffer[_end], packet + remaining_packet_len, packet_len - remaining_packet_len);
-				_end += packet_len - remaining_packet_len;
-
-			} else {
-				memcpy(&_ringbuffer[_end], packet, packet_len);
-				_end += packet_len;
-			}
-		}
-	}
+	// In case asserts are commented out to prevent unused warnings.
+	(void)result;
 
 	return true;
 }
@@ -136,49 +87,22 @@ size_t VariableLengthRingbuffer::pop_front(uint8_t *buf, size_t buf_max_len)
 		return 0;
 	}
 
-	if (_start == _end) {
-		// Empty
-		return 0;
-	}
-
-	// If there isn't space for the next header, so we jump to the beginning.
-	if (_start + sizeof(Header) > _size) {
-		_start = 0;
-	}
-
 	// Check next header
 	Header header;
-	memcpy(&header, &_ringbuffer[_start], sizeof(header));
 
-	if (header.len > buf_max_len) {
-		// We can't it the packet into the user supplied buffer.
+	if (!_ringbuffer.pop_front(reinterpret_cast<uint8_t *>(&header), sizeof(header))) {
 		return 0;
 	}
 
-	assert(header.len < _size);
+	// We can't fit the packet into the user supplied buffer.
+	// This should never happen as the user has to supply a big // enough buffer.
+	assert(static_cast<uint32_t>(header.len) <= buf_max_len);
 
-	_start += sizeof(header);
-	_start %= _size;
+	size_t bytes_read = _ringbuffer.pop_front(buf, header.len);
+	assert(bytes_read == header.len);
 
-	if (_start < _end) {
-		// No wrap around.
-		memcpy(buf, &_ringbuffer[_start], header.len);
-		_start += header.len;
-
-	} else {
-		const size_t remaining_buf_len = _size - _start;
-
-		if (header.len > remaining_buf_len) {
-			memcpy(buf, &_ringbuffer[_start], remaining_buf_len);
-			_start = 0;
-			memcpy(buf + remaining_buf_len, &_ringbuffer[_start], header.len - remaining_buf_len);
-			_start += header.len - remaining_buf_len;
-
-		} else {
-			memcpy(buf, &_ringbuffer[_start], header.len);
-			_start += header.len;
-		}
-	}
+	// In case asserts are commented out to prevent unused warnings.
+	(void)bytes_read;
 
 	return header.len;
 }

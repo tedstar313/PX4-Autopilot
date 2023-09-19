@@ -36,6 +36,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <lib/ringbuffer/Ringbuffer.hpp>
 
 
 // FIFO ringbuffer implementation for packets of variable length.
@@ -92,6 +93,8 @@ public:
 	/*
 	 * @brief Get packet from ringbuffer
 	 *
+	 * @note max_buf_len needs to be bigger equal to any pushed packet.
+	 *
 	 * @param buf Pointer to where next packet can be copied into.
 	 * @param max_buf_len Max size of buf
 	 *
@@ -104,8 +107,5 @@ private:
 		uint32_t len;
 	};
 
-	size_t _size {0};
-	uint8_t *_ringbuffer {nullptr};
-	size_t _start{0};
-	size_t _end{0};
+	Ringbuffer _ringbuffer {};
 };

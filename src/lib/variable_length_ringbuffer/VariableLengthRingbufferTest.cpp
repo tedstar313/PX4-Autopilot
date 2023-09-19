@@ -132,7 +132,7 @@ TEST(VariableLengthRingbuffer, PushAndPopOne)
 	EXPECT_TRUE(buf.push_back(data.buf(), data.size()));
 	// Out buffer is too small
 	TempData out3{19};
-	EXPECT_EQ(buf.pop_front(out3.buf(), out3.size()), 0);
+	EXPECT_DEATH(buf.pop_front(out3.buf(), out3.size()), ".*");
 }
 
 TEST(VariableLengthRingbuffer, PushAndPopSeveral)

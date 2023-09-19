@@ -35,6 +35,8 @@ px4_add_library(variable_length_ringbuffer
 	VariableLengthRingbuffer.cpp
 )
 
+target_link_libraries(variable_length_ringbuffer PRIVATE ringbuffer)
+
 target_include_directories(variable_length_ringbuffer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 px4_add_unit_gtest(SRC VariableLengthRingbufferTest.cpp LINKLIBS variable_length_ringbuffer)
