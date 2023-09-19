@@ -532,6 +532,10 @@
                             "name": "auto_vtol_takeoff",
                             "description": "Vtol Takeoff"
                         },
+                        "16": {
+                            "name": "position_slow",
+                            "description": "Position Slow"
+                        },
                         "255": {
                             "name": "unknown",
                             "description": "[Unknown]"

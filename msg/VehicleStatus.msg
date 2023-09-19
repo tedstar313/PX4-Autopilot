@@ -52,7 +52,8 @@ uint8 NAVIGATION_STATE_AUTO_FOLLOW_TARGET = 19  # Auto Follow
 uint8 NAVIGATION_STATE_AUTO_PRECLAND = 20       # Precision land with landing target
 uint8 NAVIGATION_STATE_ORBIT = 21               # Orbit in a circle
 uint8 NAVIGATION_STATE_AUTO_VTOL_TAKEOFF = 22   # Takeoff, transition, establish loiter
-uint8 NAVIGATION_STATE_MAX = 23
+uint8 NAVIGATION_STATE_POSITION_SLOW = 23
+uint8 NAVIGATION_STATE_MAX = 24
 
 # Bitmask of detected failures
 uint16 failure_detector_status

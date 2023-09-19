@@ -75,9 +75,11 @@ static inline navigation_mode_t navigation_mode(uint8_t nav_state)
 	case vehicle_status_s::NAVIGATION_STATE_ORBIT: return navigation_mode_t::orbit;
 
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_VTOL_TAKEOFF: return navigation_mode_t::auto_vtol_takeoff;
+
+	case vehicle_status_s::NAVIGATION_STATE_POSITION_SLOW: return navigation_mode_t::position_slow;
 	}
 
-	static_assert(vehicle_status_s::NAVIGATION_STATE_MAX  == 23, "code requires update");
+	static_assert(vehicle_status_s::NAVIGATION_STATE_MAX == 24, "code requires update");
 
 	return navigation_mode_t::unknown;
 }
@@ -104,7 +106,9 @@ const char *const nav_state_names[vehicle_status_s::NAVIGATION_STATE_MAX] = {
 	"AUTO_LAND",
 	"AUTO_FOLLOW_TARGET",
 	"AUTO_PRECLAND",
-	"ORBIT"
+	"ORBIT",
+	"AUTO_VTOL_TAKEOFF",
+	"POSITION_SLOW"
 };
 
 } // namespace mode_util

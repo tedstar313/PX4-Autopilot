@@ -68,7 +68,8 @@ enum PX4_CUSTOM_SUB_MODE_AUTO {
 
 enum PX4_CUSTOM_SUB_MODE_POSCTL {
 	PX4_CUSTOM_SUB_MODE_POSCTL_POSCTL = 0,
-	PX4_CUSTOM_SUB_MODE_POSCTL_ORBIT
+	PX4_CUSTOM_SUB_MODE_POSCTL_ORBIT,
+	PX4_CUSTOM_SUB_MODE_POSCTL_SLOW
 };
 
 union px4_custom_mode {
@@ -170,6 +171,11 @@ static inline union px4_custom_mode get_px4_custom_mode(uint8_t nav_state)
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_VTOL_TAKEOFF:
 		custom_mode.main_mode = PX4_CUSTOM_MAIN_MODE_AUTO;
 		custom_mode.sub_mode = PX4_CUSTOM_SUB_MODE_AUTO_VTOL_TAKEOFF;
+		break;
+
+	case vehicle_status_s::NAVIGATION_STATE_POSITION_SLOW:
+		custom_mode.main_mode = PX4_CUSTOM_MAIN_MODE_POSCTL;
+		custom_mode.sub_mode = PX4_CUSTOM_SUB_MODE_POSCTL_SLOW;
 		break;
 	}
 
