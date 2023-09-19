@@ -130,9 +130,13 @@ TEST(VariableLengthRingbuffer, PushAndPopOne)
 	EXPECT_EQ(data, out2);
 
 	EXPECT_TRUE(buf.push_back(data.buf(), data.size()));
+
+#ifdef NDEBUG
 	// Out buffer is too small
+	// Asserts are disabled in release build
 	TempData out3{19};
 	EXPECT_DEATH(buf.pop_front(out3.buf(), out3.size()), ".*");
+#endif
 }
 
 TEST(VariableLengthRingbuffer, PushAndPopSeveral)
