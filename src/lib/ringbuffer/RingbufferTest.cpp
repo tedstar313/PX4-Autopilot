@@ -117,6 +117,9 @@ TEST(Ringbuffer, PushAndPopOne)
 
 	EXPECT_TRUE(buf.push_back(data.buf(), data.size()));
 
+	EXPECT_EQ(buf.space_used(), 20);
+	EXPECT_EQ(buf.space_available(), 79);
+
 	// Get everything
 	TempData out{20};
 	EXPECT_EQ(buf.pop_front(out.buf(), out.size()), 20);

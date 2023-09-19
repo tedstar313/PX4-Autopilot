@@ -60,6 +60,28 @@ void Ringbuffer::deallocate()
 	_size = 0;
 }
 
+size_t Ringbuffer::space_available() const
+{
+	if (_start > _end) {
+		return _start - _end - 1;
+
+	} else {
+		return _start - _end - 1 + _size;
+	}
+}
+
+size_t Ringbuffer::space_used() const
+{
+	if (_start < _end) {
+		return _end - _start;
+
+	} else {
+		// Potential wrap around.
+		return _end - _start + _size;
+	}
+}
+
+
 bool Ringbuffer::push_back(const uint8_t *buf, size_t buf_len)
 {
 	if (buf_len == 0 || buf == nullptr) {

@@ -79,6 +79,20 @@ public:
 	void deallocate();
 
 	/*
+	 * @brief Space available to copy bytes into
+	 *
+	 * @returns number of free bytes.
+	 */
+	size_t space_available() const;
+
+	/*
+	 * @brief Space used to copy data from
+	 *
+	 * @returns number of used bytes.
+	 */
+	size_t space_used() const;
+
+	/*
 	 * @brief Copy data into ringbuffer
 	 *
 	 * @param buf Pointer to buffer to copy from.
