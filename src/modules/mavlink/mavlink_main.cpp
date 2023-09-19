@@ -2467,17 +2467,19 @@ Mavlink::task_main(int argc, char *argv[])
 		if (get_forwarding_on()) {
 
 			mavlink_message_t msg{};
-
-			// Moved outside of do-while to avoid "unused-but-set-variable" GCC warning.
 			size_t available_bytes;
+			{
+				// We only send one message at a time, not to put too much strain on a
+				// link from forwarded messages.
+				LockGuard lg{_message_buffer_mutex};
+				available_bytes = _message_buffer.pop_front(reinterpret_cast<uint8_t *>(&msg), sizeof(msg));
+				// We need to make sure to release the lock here before sending the
+				// bytes out via IP or UART which could potentially take longer.
+			}
 
-			do {
-				{
-					LockGuard lg{_message_buffer_mutex};
-					available_bytes = _message_buffer.pop_front(reinterpret_cast<uint8_t *>(&msg), sizeof(msg));
-				}
+			if (available_bytes > 0) {
 				resend_message(&msg);
-			} while (available_bytes > 0);
+			}
 		}
 
 		/* update TX/RX rates*/
