@@ -65,6 +65,29 @@ parameters:
             default: 2130706433
             requires_ethernet: true
 
+        UXRCE_DDS_CSTPT:
+            description:
+                short: Use custom participant for uXRCE-DDS
+                long: |
+                    When enabled, use a custom participant config with the profile name
+                    "px4_participant".
+            type: boolean
+            category: System
+            reboot_required: true
+            default: 0
+
+        UXRCE_DDS_LHO:
+            description:
+                short: uXRCE-DDS messages on localhost only
+                long: |
+                    When enabled, restrict messages to localhost on the Agent's system
+                    (use in combination with ROS_LOCALHOST_ONLY=1). This is not available
+                    when using a custom participant config.
+            type: boolean
+            category: System
+            reboot_required: true
+            default: 0
+
         UXRCE_DDS_SYNCT:
             description:
                 short: Enable uXRCE-DDS timestamp synchronization

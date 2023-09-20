@@ -693,6 +693,20 @@ UxrceddsClient *UxrceddsClient::instantiate(int argc, char *argv[])
 			 static_cast<uint8_t>(ip_i & 0xff));
 	}
 
+	if (!localhost_only) {
+		// Localhost-only flag not given. Check for parameter.
+		int32_t localhost_only_param = 0;
+		param_get(param_find("UXRCE_DDS_LHO"), &localhost_only_param);
+		localhost_only = localhost_only_param == 1;
+	}
+
+	if (!custom_participant) {
+		// Custom participant flag not given. Check for parameter.
+		int32_t custom_participant_param = 0;
+		param_get(param_find("UXRCE_DDS_CSTPT"), &custom_participant_param);
+		custom_participant = custom_participant_param == 1;
+	}
+
 #endif // UXRCE_DDS_CLIENT_UDP
 
 	if (error_flag) {
