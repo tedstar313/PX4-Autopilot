@@ -157,6 +157,9 @@ void MissionBase::onMissionUpdate(bool has_mission_items_changed)
 			_mission_has_been_activated = false;
 		}
 	}
+
+	// reset as when we update mission we don't want to proceed at previous index
+	_inactivation_index = -1;
 }
 
 void
@@ -399,9 +402,6 @@ void MissionBase::update_mission()
 	if (_mission.current_seq == 0) {
 		resetItemCache();
 	}
-
-	// reset as when we update mission we don't want to proceed at previous index
-	// _inactivation_index = -1; // TODO check what this one does.
 
 	set_mission_result();
 }
